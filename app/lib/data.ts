@@ -10,6 +10,8 @@ import {
 } from './definitions';
 import { formatCurrency } from './utils';
 import { unstable_noStore as noStore } from 'next/cache';
+import { notFound } from 'next/navigation';
+import { isNotFoundError } from 'next/dist/client/components/not-found';
 
 export async function fetchRevenue() {
   // Add noStore() here to prevent the response from being cached.
@@ -169,8 +171,15 @@ export async function fetchInvoiceById(id: string) {
       amount: invoice.amount / 100,
     }));
 
+    if (invoice.length === 0) {
+      notFound();
+    }
+
     return invoice[0];
   } catch (error) {
+    if (isNotFoundError(error)) {
+      throw error;
+    }
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoice.');
   }
